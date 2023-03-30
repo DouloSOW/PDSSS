@@ -310,7 +310,7 @@ tab=tabmulti(emploi ~  annee , data = data)
 print(tab)}
 #PUSH OUT GRAPH
 #On conserve les baisse des taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(3.7,3.2,3.2,3.7,3.3,4.1,4.5,4.1,4.8,4.2,2.1,3.7,5.1,6.7,5.5,5.3,4.4)
+emploiout <- c(3.7,3.2,3.2,3.7,3.3,4.1,4.5,4.1,4.8,4.2,2.1,3.7,5.1,6.7,5.5,5.3,4.4)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -359,7 +359,7 @@ hcmap("countries/fr/fr-all",
 #PUSH IN GRAPH
 
 #On conserve les hausse des taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(2.5,4.4,2.7,2.9,3.1,3.3,2.7,2.4,2.5,3.3,2.7,1.6,3.2,2.9,2.4,3.0,3.0)
+emploiin <- c(2.5,4.4,2.7,2.9,3.1,3.3,2.7,2.4,2.5,3.3,2.7,1.6,3.2,2.9,2.4,3.0,3.0)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -405,7 +405,54 @@ hcmap("countries/fr/fr-all",
   
   hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
+#carte difference push out push in
+emploi=emploiout-emploiin
 
+emploi
+#labellisation des regions
+region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
+
+emploiQ12020 <- data.frame(region, emploi)
+emploiQ12020=emploiQ12020 %>% 
+  rename(
+    'hc-a2' = region,
+    emploi = emploi
+  )
+#Carte evolution taux d'emploi entre 2019 et 2020Q1 par région
+
+library('highcharter')
+library(dplyr)
+
+data_fr <- download_map_data("countries/fr/fr-all") %>% 
+  
+  get_data_from_map() %>% 
+  # Une valeur aléatoire pour la coloration
+  mutate(value = 1e5 * abs(rt(nrow(.), df = 10)))
+
+# Carte
+data_fr=data_fr%>%filter(!name %in% c("Mayotte"))
+hcmap("countries/fr/fr-all",
+      data = emploiQ12020,
+      value = "emploi",
+      joinBy = "hc-a2",
+      name = "Taux d'emploi",
+      dataLabels = list(enabled = TRUE, format = '{point.name}'),
+      borderColor = "#FAFAFA", borderWidth = 0.1,
+      tooltip = list(valueDecimals = 1, valuePrefix = "",
+                     valueSuffix = " %")) %>% 
+  hc_title(
+    text = "Difference push out / push in entre Q4 2019 et Q1 2020",
+    margin = 20,
+    align = "left",
+    style = list(color = "blue", useHTML = TRUE)
+  )%>%hc_colorAxis(minColor = "white", maxColor =  "black")%>%
+  hc_legend(align = "left",
+            verticalAlign = "top",
+            layout = "vertical",x=0,y=100,
+            
+            title="Taux d'emploi")%>%
+  
+  hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
 #Regression 
 regre=lm(emploi ~ annee + sexe, data=Append_Q2019_Q12020)
@@ -451,7 +498,7 @@ for (i in region)
 
 #PUSH OUT GRAPH
 #On conserve les taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(5.7,6.3,5.8,6.0,5.1,6.6,6.4,6.4,2.5,6.4,5.7,6.7,7.8,10.4,7.0,7.4,8.0)
+emploiout <- c(5.7,6.3,5.8,6.0,5.1,6.6,6.4,6.4,2.5,6.4,5.7,6.7,7.8,10.4,7.0,7.4,8.0)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -501,7 +548,7 @@ hcmap("countries/fr/fr-all",
 #PUSH IN GRAPH
 
 #On conserve les hausse des taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(3.0,4.9,3.2,3.1,3.5,3.7,3.2,3.1,2.7,3.6,3.5,3.7,4.2,3.4,3.2,3.7,3.1)
+emploiin <- c(3.0,4.9,3.2,3.1,3.5,3.7,3.2,3.1,2.7,3.6,3.5,3.7,4.2,3.4,3.2,3.7,3.1)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -548,7 +595,54 @@ hcmap("countries/fr/fr-all",
   hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
 
+#Carte diff push out vs push in 
 
+emploi= emploiout - emploiin
+
+#labellisation des regions
+region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
+
+emploiQ22020 <- data.frame(region, emploi)
+emploiQ22020=emploiQ22020 %>% 
+  rename(
+    'hc-a2' = region,
+    emploi = emploi
+  )
+#Carte evolution taux d'emploi entre 2019 et 2020Q2 par région
+
+library('highcharter')
+library(dplyr)
+
+data_fr <- download_map_data("countries/fr/fr-all") %>% 
+  
+  get_data_from_map() %>% 
+  # Une valeur aléatoire pour la coloration
+  mutate(value = 1e5 * abs(rt(nrow(.), df = 10)))
+
+# Carte
+data_fr=data_fr%>%filter(!name %in% c("Mayotte"))
+hcmap("countries/fr/fr-all",
+      data = emploiQ22020,
+      value = "emploi",
+      joinBy = "hc-a2",
+      name = "Taux d'emploi",
+      dataLabels = list(enabled = TRUE, format = '{point.name}'),
+      borderColor = "#FAFAFA", borderWidth = 0.1,
+      tooltip = list(valueDecimals = 1, valuePrefix = "",
+                     valueSuffix = " %")) %>% 
+  hc_title(
+    text = "Différence push out / push in entre Q4 2019 et Q2 2020",
+    margin = 20,
+    align = "left",
+    style = list(color = "blue", useHTML = TRUE)
+  )%>%hc_colorAxis(minColor = "white", maxColor =  "black")%>%
+  hc_legend(align = "left",
+            verticalAlign = "top",
+            layout = "vertical",x=0,y=100,
+            
+            title="Taux d'emploi")%>%
+  
+  hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
 
 
@@ -600,7 +694,7 @@ tab=tabmulti(emploi ~  annee , data = data)
 print(tab)}
 #PUSH OUT GRAPH
 #On conserve les taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(6.2,8.0,6.0,7.1,5.7,6.4,8.5,7.2,6.4,9.3,8.1,7.3,9.0,11.2,8.2,7.8,8.7)
+emploiout <- c(6.2,8.0,6.0,7.1,5.7,6.4,8.5,7.2,6.4,9.3,8.1,7.3,9.0,11.2,8.2,7.8,8.7)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -651,7 +745,7 @@ hcmap("countries/fr/fr-all",
 #PUSH IN GRAPH
 
 #On conserve les hausse des taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(5.1,6.6,5.7,3.9,4.5,5.2,3.9,5.1,5.6,5.9,6.3,5.7,8.4,3.5,3.8,4.9,3.7)
+emploiin <- c(5.1,6.6,5.7,3.9,4.5,5.2,3.9,5.1,5.6,5.9,6.3,5.7,8.4,3.5,3.8,4.9,3.7)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -697,6 +791,52 @@ hcmap("countries/fr/fr-all",
   
   hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
+#Carte diff push out vs push in 
+emploi=emploiout-emploiin
+#labellisation des regions
+region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
+
+emploiQ32020 <- data.frame(region, emploi)
+emploiQ32020=emploiQ32020 %>% 
+  rename(
+    'hc-a2' = region,
+    emploi = emploi
+  )
+#Carte evolution taux d'emploi entre 2019 et 2020Q3 par région
+
+library('highcharter')
+library(dplyr)
+
+data_fr <- download_map_data("countries/fr/fr-all") %>% 
+  
+  get_data_from_map() %>% 
+  # Une valeur aléatoire pour la coloration
+  mutate(value = 1e5 * abs(rt(nrow(.), df = 10)))
+
+# Carte
+data_fr=data_fr%>%filter(!name %in% c("Mayotte"))
+hcmap("countries/fr/fr-all",
+      data = emploiQ32020,
+      value = "emploi",
+      joinBy = "hc-a2",
+      name = "Taux d'emploi",
+      dataLabels = list(enabled = TRUE, format = '{point.name}'),
+      borderColor = "#FAFAFA", borderWidth = 0.1,
+      tooltip = list(valueDecimals = 1, valuePrefix = "",
+                     valueSuffix = " %")) %>% 
+  hc_title(
+    text = "Difference push out / push in entre Q4 2019 et Q3 2020",
+    margin = 20,
+    align = "left",
+    style = list(color = "blue", useHTML = TRUE)
+  )%>%hc_colorAxis(minColor = "white", maxColor =  "black")%>%
+  hc_legend(align = "left",
+            verticalAlign = "top",
+            layout = "vertical",x=0,y=100,
+            
+            title="Taux d'emploi")%>%
+  
+  hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
 #Regression 
 reg3=lm(emploi ~ annee + sexe, data=Append_Q2019_Q32020)
@@ -739,7 +879,7 @@ tab=tabmulti(emploi ~  annee , data = data)
 print(tab)}
 #PUSH OUT GRAPH
 #On conserve les taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(8.2,5.3,7.9,6.9,5.8,9.2,8.0,9.5,6.5,9.4,8.0,9.2,6.2,14.6,8.7,9.7,11.8)
+emploiout <- c(8.2,5.3,7.9,6.9,5.8,9.2,8.0,9.5,6.5,9.4,8.0,9.2,6.2,14.6,8.7,9.7,11.8)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -788,7 +928,7 @@ hcmap("countries/fr/fr-all",
 
 #PUSH IN GRAPH
 #On conserve les hausse des taux d'emploi par région afin de les utiliser pour la carte
-emploi <- c(7.8,5.1,7.1,5.0,6.4,4.3,5.2,4.5,6.5,5.7,4.9,6.7,3.2,3.5,5.5,7.5,6.1)
+emploiin <- c(7.8,5.1,7.1,5.0,6.4,4.3,5.2,4.5,6.5,5.7,4.9,6.7,3.2,3.5,5.5,7.5,6.1)
 #labellisation des regions
 region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
 
@@ -835,7 +975,53 @@ hcmap("countries/fr/fr-all",
   hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
 
+#Carte difference push out vs push in
+emploi= emploiout-emploiin
 
+#labellisation des regions
+region<-c("NA","ÎD","BF","GE","NO","BR","PA","AR","CO","OC","CV","HD","PD","MQ","GF","LR","GU")
+
+emploiQ42020 <- data.frame(region, emploi)
+emploiQ42020=emploiQ42020 %>% 
+  rename(
+    'hc-a2' = region,
+    emploi = emploi
+  )
+#Carte evolution taux d'emploi entre 2019 et 2020Q4 par région
+
+library('highcharter')
+library(dplyr)
+
+data_fr <- download_map_data("countries/fr/fr-all") %>% 
+  
+  get_data_from_map() %>% 
+  # Une valeur aléatoire pour la coloration
+  mutate(value = 1e5 * abs(rt(nrow(.), df = 10)))
+
+# Carte
+data_fr=data_fr%>%filter(!name %in% c("Mayotte"))
+hcmap("countries/fr/fr-all",
+      data = emploiQ42020,
+      value = "emploi",
+      joinBy = "hc-a2",
+      name = "Taux d'emploi",
+      dataLabels = list(enabled = TRUE, format = '{point.name}'),
+      borderColor = "#FAFAFA", borderWidth = 0.1,
+      tooltip = list(valueDecimals = 1, valuePrefix = "",
+                     valueSuffix = " %")) %>% 
+  hc_title(
+    text = "Difference push out/push in entre Q4 2019 et Q4 2020",
+    margin = 20,
+    align = "left",
+    style = list(color = "blue", useHTML = TRUE)
+  )%>%hc_colorAxis(minColor = "white", maxColor =  "black")%>%
+  hc_legend(align = "left",
+            verticalAlign = "top",
+            layout = "vertical",x=0,y=100,
+            
+            title="Taux d'emploi")%>%
+  
+  hc_mapNavigation(enabled = TRUE,enableMouseWheelZoom = TRUE)  
 
 
 
