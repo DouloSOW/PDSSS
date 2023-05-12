@@ -1,8 +1,10 @@
-rm(list=ls(all=TRUE))
+#rm(list=ls(all=TRUE))
   #edit(GenericML)
 
 library(haven)
 library(VIM)
+library(doParallel)
+library(snow)
 path <- "C:/Users/doulo/Dropbox (Personal)/PDSSS/Data/append/"
 
 datatouse<-read_stata(paste0(path,"1_forGML.dta"))
@@ -29,6 +31,7 @@ data<-data%>% select(!starts_with("activite_econo"))%>%
 aggr(data, col=c('blue','tomato'), numbers=TRUE, sortVars=FALSE, sortCombs=TRUE, combined=TRUE, only.miss= TRUE, labels=names(data), cex.axis=.6, prop = FALSE, ylab = "Pattern of missing data")
 data = data[complete.cases(data),]
 
+#data = data[sample(nrow(data), 50000),]
 # specify learners
 learners <-
   c("random_forest",
@@ -40,15 +43,15 @@ cluster <- as.vector(as.numeric(data$ident))
 
 # include BCA and CATE controls
 # add fixed effects along variable "vil_pair"
-X1 <- setup_X1(funs_Z = c("B", "S"),
-               fixed_effects = cluster
+X1 <- setup_X1(funs_Z = c("B", "S")#,
+               #fixed_effects = cluster
                )
 #D <-  as.vector(as.numeric(data$annee))
 D <-  as.vector(as.numeric(data$annee))
 Y <- as.vector(as.numeric(data$emploi))
 
 Z <- as.matrix(data %>% 
-                 select(-c("emploi","annee","ident", "dipl1"))
+                 select(-c("emploi","annee","ident"))
                 )
 
 
@@ -66,37 +69,37 @@ diff_CLAN  <- setup_diff(subtract_from = "most",
 
 # run GenericML()
 
-genML2 <- GenericML(
+genML4 <- GenericML(
   Z = Z, D = D, Y = Y,                      # observed data
   learners_GenericML = learners,            # learners
   learner_propensity_score = "constant",    # = 0.5 (RCT)
   num_splits = 2L,                        # number splits
   #quantile_cutoffs = c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8), # grouping
-  quantile_cutoffs = c(0.33, 0.66),
+  quantile_cutoffs = c(0.25, 0.5, 0.75),
   significance_level = 0.05,                # significance level
   X1_BLP = X1, X1_GATES = X1,               # regression setup
   diff_CLAN = diff_CLAN,
   diff_GATES = diff_GATES,
   vcov_BLP = vcov, vcov_GATES = vcov,       # covariance setup
-  parallel = TRUE, num_cores = 10,          # parallelization
+  parallel = TRUE, num_cores = detectCores(),          # parallelization
   seed = 1234)                          #  seed
 
 # BLP
-results_BLP <- get_BLP(genML2, plot = TRUE)
+results_BLP <- get_BLP(genML4, plot = TRUE)
 results_BLP       # print method
 plot(results_BLP) # plot method
 
 # GATES
-results_GATES <- get_GATES(genML2, plot = TRUE)
+results_GATES <- get_GATES(genML4, plot = TRUE)
 results_GATES
 plot(results_GATES)
 
 # CLAN
-results_CLAN <- get_CLAN(genML2, variable = "sexe", plot = TRUE)
+results_CLAN <- get_CLAN(genML4, variable = "nbenfa3", plot = TRUE)
 results_CLAN
 plot(results_CLAN)
 
-genML2$VEIN$best_learners$CLAN
+genML4$VEIN$best_learners$CLAN
 # best learners
-get_best(genML2)
+get_best(genML4)
 
